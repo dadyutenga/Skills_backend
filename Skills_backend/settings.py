@@ -153,3 +153,11 @@ AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
 AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
 AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
 
+FRONTEND_URL = "http://localhost:3000"  # Your React app URL
+
+CORS_ALLOWED_ORIGINS = [
+    FRONTEND_URL,
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
