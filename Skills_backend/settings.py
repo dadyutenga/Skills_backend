@@ -25,6 +25,7 @@ TEMPLATE_DIR = os.path.join(BASE_DIR, "templates")
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-7q+(0=4$=ifmvr)(go!(v+3wr1)2(j$8+d^u5p6_+2%$ql88_$'
+SECRET_KEY = "auth0-webappexample-k0n4a#6cqu9=co$_bu^^sd@&^8#*%ukg3z4ku!lj&j)%^@cx8%"
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
