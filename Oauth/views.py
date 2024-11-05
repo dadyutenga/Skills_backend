@@ -1,4 +1,5 @@
 from rest_framework.decorators import api_view
+from django.shortcuts import redirect
 from rest_framework.response import Response
 from rest_framework import status
 from django.conf import settings
@@ -48,17 +49,23 @@ def callback(request):
     
     try:
         token = oauth.auth0.authorize_access_token(request)
-        request.session["user"] = token
-        return Response({
-            "success": True,
-            "user": token
-        })
+        
+        # Store user info in session
+        request.session['user'] = {
+            'name': token['userinfo']['name'],
+            'email': token['userinfo']['email'],
+            'picture': token['userinfo']['picture'],
+            'sub': token['userinfo']['sub']
+        }
+        
+        # Redirect to React frontend dashboard
+        frontend_url = 'http://localhost:3000/dashboard'
+        return redirect(frontend_url)
+        
     except Exception as e:
         logger.error(f"Callback error: {str(e)}")
-        return Response(
-            {"error": str(e)},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        # Redirect to frontend login page on error
+        return redirect('http://localhost:3000/login?error=auth_failed')
 
 @api_view(['GET', 'OPTIONS'])
 def get_auth_status(request):
@@ -70,19 +77,26 @@ def get_auth_status(request):
         "user": request.session.get("user")
     })
 
-@api_view(['POST', 'OPTIONS'])
+@api_view(['POST'])
 def logout(request):
-    if request.method == 'OPTIONS':
-        return Response(status=status.HTTP_200_OK)
-    
-    request.session.clear()
-    return Response({
-        "logoutUrl": f"https://{settings.AUTH0_DOMAIN}/v2/logout?"
-        + urlencode(
-            {
-                "returnTo": settings.FRONTEND_URL,
-                "client_id": settings.AUTH0_CLIENT_ID,
-            },
-            quote_via=quote_plus,
+    try:
+        # Clear the Django session
+        request.session.flush()
+        
+        # Construct the Auth0 logout URL
+        return_to = 'http://localhost:3000/login'
+        logout_url = (
+            f'https://{settings.AUTH0_DOMAIN}/v2/logout?'
+            f'client_id={settings.AUTH0_CLIENT_ID}&'
+            f'returnTo={return_to}'
         )
-    })
+        
+        return Response({
+            "logoutUrl": logout_url
+        })
+    except Exception as e:
+        logger.error(f"Logout error: {str(e)}")
+        return Response(
+            {"error": "Logout failed"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )

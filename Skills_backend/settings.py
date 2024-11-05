@@ -189,6 +189,7 @@ CORS_ALLOW_HEADERS = [
 ]
 
 # Session settings
+SESSION_COOKIE_AGE = 86400
 SESSION_COOKIE_SECURE = False  # Set to True in production with HTTPS
 SESSION_COOKIE_SAMESITE = 'Lax'  # Use 'Strict' in production
 SESSION_COOKIE_HTTPONLY = True
