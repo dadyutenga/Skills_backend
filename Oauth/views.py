@@ -100,3 +100,63 @@ def logout(request):
             {"error": "Logout failed"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+@api_view(['GET'])
+def get_profile(request):
+    try:
+        user = request.session.get('user')
+        if not user:
+            return Response(
+                {"error": "Not authenticated"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+        profile_data = {
+            'name': user.get('name', ''),
+            'email': user.get('email', ''),
+            'picture': user.get('picture', ''),
+            'bio': user.get('bio', ''),
+            'phone': user.get('phone', ''),
+            'location': user.get('location', '')
+        }
+        
+        return Response(profile_data)
+        
+    except Exception as e:
+        logger.error(f"Get profile error: {str(e)}")
+        return Response(
+            {"error": "Failed to retrieve profile"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['PUT'])
+def update_profile(request):
+    try:
+        user = request.session.get('user')
+        if not user:
+            return Response(
+                {"error": "Not authenticated"}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
+        # Update user data in session
+        user.update({
+            'name': request.data.get('name', user.get('name')),
+            'email': request.data.get('email', user.get('email')),
+            'picture': request.data.get('picture', user.get('picture')),
+            'bio': request.data.get('bio', user.get('bio')),
+            'phone': request.data.get('phone', user.get('phone')),
+            'location': request.data.get('location', user.get('location'))
+        })
+        
+        request.session['user'] = user
+        request.session.modified = True
+        
+        return Response(user)
+        
+    except Exception as e:
+        logger.error(f"Update profile error: {str(e)}")
+        return Response(
+            {"error": "Failed to update profile"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
