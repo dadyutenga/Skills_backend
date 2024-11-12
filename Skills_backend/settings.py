@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'django_filters',
     'channels',
     'authlib',
+    'personal_training',
 ]
 
 MIDDLEWARE = [
@@ -174,6 +175,7 @@ CORS_ALLOW_METHODS = [
     'PATCH',
     'POST',
     'PUT',
+    'FETCH',
 ]
 
 CORS_ALLOW_HEADERS = [
