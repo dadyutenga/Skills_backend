@@ -1,13 +1,7 @@
 from django import forms
-from .models import LearningMaterial
+from .models import Lesson, Quiz
 
 class QuizGenerationForm(forms.Form):
-    learning_material = forms.ModelChoiceField(
-        queryset=LearningMaterial.objects.filter(content_type='quiz'),
-        label="Learning Material",
-        help_text="Select the learning material this quiz is for"
-    )
-    
     topic = forms.CharField(
         max_length=200,
         help_text="The main topic for the quiz"

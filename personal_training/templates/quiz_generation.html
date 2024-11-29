@@ -14,17 +14,47 @@
             </div>
             {% endif %}
 
-            {% for field in form %}
+            <!-- Topic Field -->
             <div class="form-group">
                 <label class="block text-sm font-medium text-gray-700">
-                    {{ field.label }}
+                    {{ form.topic.label }}
                 </label>
-                {{ field }}
-                {% if field.errors %}
-                <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
+                {{ form.topic }}
+                {% if form.topic.help_text %}
+                <p class="text-sm text-gray-500">{{ form.topic.help_text }}</p>
+                {% endif %}
+                {% if form.topic.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.topic.errors.0 }}</p>
                 {% endif %}
             </div>
-            {% endfor %}
+
+            <!-- Difficulty Field -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700">
+                    {{ form.difficulty.label }}
+                </label>
+                {{ form.difficulty }}
+                {% if form.difficulty.help_text %}
+                <p class="text-sm text-gray-500">{{ form.difficulty.help_text }}</p>
+                {% endif %}
+                {% if form.difficulty.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.difficulty.errors.0 }}</p>
+                {% endif %}
+            </div>
+
+            <!-- Number of Questions Field -->
+            <div class="form-group">
+                <label class="block text-sm font-medium text-gray-700">
+                    {{ form.num_questions.label }}
+                </label>
+                {{ form.num_questions }}
+                {% if form.num_questions.help_text %}
+                <p class="text-sm text-gray-500">{{ form.num_questions.help_text }}</p>
+                {% endif %}
+                {% if form.num_questions.errors %}
+                <p class="text-red-500 text-sm mt-1">{{ form.num_questions.errors.0 }}</p>
+                {% endif %}
+            </div>
 
             <div class="flex justify-end space-x-4">
                 <a href="{% url 'quiz-list' %}" class="bg-gray-500 text-white px-4 py-2 rounded">
