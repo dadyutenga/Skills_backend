@@ -197,3 +197,4 @@ SESSION_COOKIE_SAMESITE = 'Lax'  # Use 'Strict' in production
 SESSION_COOKIE_HTTPONLY = True
 
 AUTH0_CALLBACK_URL = "http://localhost:8000/auth/callback/"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
