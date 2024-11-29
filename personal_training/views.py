@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.views.generic import CreateView, ListView
+from django.views.generic import FormView, ListView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from .models import Quiz, Question, Choice, LearningMaterial
@@ -7,14 +7,14 @@ from .forms import QuizGenerationForm
 from .services.quiz_generator import QuizGenerationService
 import asyncio
 
-class QuizListView(LoginRequiredMixin, ListView):
+class QuizListView(ListView):
     model = Quiz
     template_name = 'personal_training/quiz_list.html'
     context_object_name = 'quizzes'
 
-class QuizGenerationView(LoginRequiredMixin, CreateView):
+class QuizGenerationView(FormView):
     form_class = QuizGenerationForm
-    template_name = 'personal_training/quiz_generation_form.html'
+    template_name = 'personal_training/quiz_generation.html'
     success_url = reverse_lazy('quiz-list')
 
     async def form_valid(self, form):
