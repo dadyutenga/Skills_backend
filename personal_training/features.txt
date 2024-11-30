@@ -1,0 +1,381 @@
+Error generating quiz: Could not find valid JSON in response
+Quiz generation error: Quiz generation failed: Could not find valid JSON in response
+[30/Nov/2024 09:19:30] "POST /personal_training/quizzes/generate/ HTTP/1.1" 200 3030
+Quiz saving error: null value in column "lesson_id" of relation "personal_training_learningmaterial" violates not-null constraint
+DETAIL:  Failing row contains (1, Quiz: aaaaaaaaaaaaa, quiz, aaaaaaaaaaaaa, null, 1, t, null).
+[30/Nov/2024 09:19:52] "POST /personal_training/quizzes/generate/ HTTP/1.1" 200 3030
+
+
+
+28/11, 07:41] mwesiga: *Course 1: Financial Literacy for Beginners* 
+
+Lesson Title: Mastering Budgeting Basics
+
+Opening Model:
+
+Interactive Question with a Poll:
+"Imagine you received $100 today. How would you spend it?
+
+A) Save it all
+
+B) Spend on essentials
+
+C) Split between fun and savings
+
+D) Don't know"
+
+Poll Results in Real-Time with AI analysis of choices.
+
+Lesson Content:
+
+1. Summarized Content:
+
+Explain the 50-30-20 rule using relatable examples like buying groceries, saving for a vacation, and paying bills.
+
+Highlight potential mistakes like overspending on wants or neglecting savings.
+
+2. Simulation:
+
+Real-Life Scenario Exercise:
+Students are given $500 in a virtual budget simulation. They need to allocate the amount across categories: rent, groceries, entertainment, savings, etc. AI reviews their budget and provides instant feedback on their choices.
+
+“You allocated 60% to needs, great! Can you reduce wants from 40% to 30%?”
+
+3. Embedded Video:
+
+A 3-minute narrated video showing two characters: one overspending and one budgeting wisely using the 50-30-20 rule. The video ends with a side-by-side comparison of their financial outcomes.
+
+4. Article:
+
+A short article titled "Budget Like a Pro: Practical Tips for Everyday Life," summarizing key lessons with colorful infographics and links to budgeting apps.
+
+5. AI Interaction:
+
+AI answers students' questions dynamically:
+"What’s a good percentage for savings if I earn less than $1,000?"
+"Can I include debt repayment under 'needs'?"
+
+AI also provides personalized suggestions:
+"Based on your input, consider reducing dining-out expenses to boost your savings."
+
+6. Question:
+
+A short quiz:
+
+What’s the 50-30-20 rule?
+
+If you earn $700, how much should go to savings under this rule?
+
+Why is tracking expenses important?
+
+
+Closing Activity:
+
+Reflection Task with AI Feedback:
+
+Write one sentence describing your biggest takeaway from this lesson. AI provides encouraging feedback and offers tips for improvement.
+
+Course 2: Communication Skills for Professionals
+
+Lesson Title: Excelling in Active Listening
+
+Opening Model:
+
+Storytelling via Embedded Video:
+A workplace scene where a manager misunderstands an employee's concern because they weren’t actively listening. The story pauses, asking:
+"What could the manager have done better?"
+
+Choices:
+
+A) Ignore distractions
+
+B) Repeat what they heard
+
+C) Show empathy
+
+Lesson Content:
+
+1. Summarized Content:
+
+Introduce the basics of active listening: focus, feedback, and empathy.
+
+Provide examples of phrases to show understanding, like “So what you’re saying is…”
+
+
+2. Simulation:
+
+Interactive Role-Play:
+A virtual team member describes a challenge. Students choose responses from a dropdown menu. The AI scores their choices:
+
+Poor Listener: "That sounds tough, but I think you’re overreacting."
+
+Good Listener: "So, you’re saying you feel overwhelmed by the new deadlines?"
+
+
+3. Embedded Video:
+
+A 4-minute explainer with professional speakers demonstrating active listening in various scenarios, like a job interview, a team meeting, and a casual chat.
+
+
+
+4. Article:
+
+A practical guide: “10 Do’s and Don’ts of Active Listening,” with examples, tips, and a summary of key points.
+
+
+
+5. AI Interaction:
+
+AI provides real-time analysis of student input during role-play, offering insights like:
+"You showed empathy but missed the chance to summarize their point. Try saying, ‘If I understand correctly, you’re concerned about...’"
+
+6. Question:
+
+A short reflective quiz:
+
+What’s the key difference between hearing and listening?
+
+How can you show understanding in a conversation?
+
+Name two ways to avoid distractions while listening.
+
+
+Closing Activity:
+
+Practice Task:
+
+Record a simulated conversation where you practice active listening with AI. AI analyzes the recording and gives personalized feedback:
+
+"You could add more paraphrasing here."
+
+"Great job acknowledging the speaker’s feelings!"
+
+
+Bonus Features in Both Courses:
+
+Gamification:
+
+Earn badges for completing simulations, acing quizzes, and engaging with AI.
+
+Unlock a special badge after applying your learning in real life (e.g., creating a personal budget or practicing active listening).
+[28/11, 12:35] mwesiga: Course 1: Financial Literacy for Beginners
+
+Lesson Title: Mastering Budgeting Basics
+
+Opening Model:
+
+Storytelling with Visual Aid:
+"Imagine Maria, a young professional earning $500 a month. By the third week, she’s out of money. Why? Maria didn’t have a plan for her spending. Let’s explore how budgeting could transform her life."
+
+Includes an image of Maria’s chaotic monthly expenses compared to a structured budget.
+
+
+
+
+---
+
+Lesson Content:
+
+1. Text-Based Content from a Book:
+
+Excerpt from 'The Wealthy Barber':
+“Budgeting is about creating a map for your money, ensuring it flows toward what truly matters. Think of it as steering a ship—you can’t reach your destination without a course.”
+
+
+
+2. Infographic:
+
+A colorful infographic illustrating the 50-30-20 rule with relatable examples:
+
+50% Needs: Rent, food, utilities.
+
+30% Wants: Dining out, hobbies.
+
+20% Savings: Emergency fund, investments.
+
+
+
+
+3. Simulation (AI Virtual Lab):
+
+Interactive Lab:
+Students input their income and expenses into a virtual budgeting tool. The AI:
+
+Categorizes spending.
+
+Flags areas for improvement.
+
+Simulates financial outcomes for 1 year based on their budget choices (e.g., saving for a trip, paying off debt).
+
+
+
+
+4. Embedded Video:
+
+A 3-minute animation: “How Budgeting Changes Lives.” It follows Maria as she learns to budget, highlighting challenges and successes.
+
+
+
+5. Gamification (Optional Pop-Up):
+
+Earn a badge for creating a balanced budget in the simulation.
+
+Pop-Up Quiz Challenge:
+
+What is the ideal savings percentage under the 50-30-20 rule?
+
+Name one benefit of tracking expenses.
+
+
+
+
+6. AI Interaction:
+
+Ask AI personalized questions:
+
+“How can I budget if I have irregular income?”
+
+“What are the best tools to track spending?”
+
+
+AI provides tips and links to further resources.
+
+
+
+7. Images and Infographics:
+
+Before-and-after images of Maria’s financial health:
+
+Chaotic Spending vs. Structured Budget.
+
+
+
+
+
+Closing Model:
+
+Key Learning Points:
+
+Budgeting helps prioritize needs, manage wants, and grow savings.
+
+Tracking expenses reveals spending patterns and areas for improvement.
+
+
+Activity:
+
+Create your budget using the provided template and input it into the AI tool for feedback.
+
+
+References:
+
+Book: The Wealthy Barber by David Chilton.
+
+Video: “Budgeting Basics for Beginners” by a financial expert.
+
+
+
+
+---
+
+Course 2: Communication Skills for Professionals
+
+Lesson Title: Mastering Active Listening
+
+Opening Model:
+
+Question with Visual Stimulus:
+"Have you ever felt unheard during a meeting? Look at this image of a distracted person and think: What impact does this behavior have on communication?"
+
+
+
+Lesson Content:
+
+1. Text-Based Content from a Book:
+
+Excerpt from 'Crucial Conversations':
+“Active listening is not just hearing words—it’s about understanding intent, emotion, and meaning. It's the key to resolving conflicts and building trust.”
+
+
+
+2. Infographic:
+
+A flowchart of the Active Listening Process:
+
+Focus -> Paraphrase -> Empathize -> Clarify -> Respond Thoughtfully.
+
+
+
+
+3. Simulation (AI Virtual Lab):
+
+Virtual Role-Play:
+Students interact with a simulated colleague who shares a concern.
+
+AI analyzes responses, scoring on empathy, clarity, and understanding.
+
+Feedback: "You missed an opportunity to paraphrase. Try saying, 'So, you're feeling stressed about deadlines?'"
+
+
+
+
+4. Embedded Video:
+
+A 4-minute dramatized scenario showing poor listening and effective listening in action, highlighting the benefits of the latter.
+
+
+
+5. Gamification (Optional Pop-Up):
+
+Badge for correctly applying paraphrasing in the virtual lab.
+
+Pop-Up Question:
+
+How can paraphrasing improve communication?
+
+
+
+
+6. AI Interaction:
+
+AI answers specific questions like:
+
+“What’s the best way to deal with a distracted speaker?”
+
+“How can I show empathy without agreeing?”
+
+
+AI also provides personalized suggestions for real-life conversations.
+
+
+
+7. Images and Infographics:
+
+Visual representation of "Do's and Don'ts of Active Listening."
+
+
+
+
+Closing Model:
+
+Key Learning Points:
+
+Active listening fosters trust and clarity in communication.
+
+Key techniques include paraphrasing, maintaining focus, and showing empathy.
+
+
+Activity/Project:
+
+Record yourself practicing active listening with a friend or colleague.
+
+Analyze your recording using the AI tool for feedback.
+
+
+References:
+
+Book: Crucial Conversations by Patterson, Grenny, McMillan, and Switzler.
+
+Video: “The Power of Listening” by a communication coach.
+
+
+please based on the expalantion i gave you i want the quiz generation part to be like automated like i willl be able to generate the quizess  based on the topic plus using the learning material do based on the explanation crete a welll balanced dummy data to be enteredon the database  so adn also change teh form to have the leaarning materials and in th saving  must be done and also i want the quiz generator to  generate quizs adn their answers  plus right and wrong  choices  so please do it  as my request 

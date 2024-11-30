@@ -1,0 +1,150 @@
+[
+    {
+        "model": "personal_training.category",
+        "pk": 1,
+        "fields": {
+            "name": "Financial Literacy",
+            "description": "Learn essential financial management skills",
+            "slug": "financial-literacy"
+        }
+    },
+    {
+        "model": "personal_training.category",
+        "pk": 2,
+        "fields": {
+            "name": "Communication Skills",
+            "description": "Master professional communication techniques",
+            "slug": "communication-skills"
+        }
+    },
+    {
+        "model": "personal_training.course",
+        "pk": 1,
+        "fields": {
+            "category": 1,
+            "title": "Financial Literacy for Beginners",
+            "slug": "financial-literacy-beginners",
+            "overview": "Master essential financial concepts and practices",
+            "learning_objectives": "Understand budgeting, saving, and basic financial planning",
+            "prerequisites": "",
+            "duration_hours": 10,
+            "difficulty_level": "beginner",
+            "is_active": true,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "personal_training.course",
+        "pk": 2,
+        "fields": {
+            "category": 2,
+            "title": "Communication Skills for Professionals",
+            "slug": "communication-skills-professionals",
+            "overview": "Develop effective professional communication skills",
+            "learning_objectives": "Master active listening, clear communication, and professional interaction",
+            "prerequisites": "",
+            "duration_hours": 8,
+            "difficulty_level": "intermediate",
+            "is_active": true,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "personal_training.module",
+        "pk": 1,
+        "fields": {
+            "course": 1,
+            "title": "Budgeting Fundamentals",
+            "description": "Learn the basics of effective budgeting",
+            "order": 1
+        }
+    },
+    {
+        "model": "personal_training.module",
+        "pk": 2,
+        "fields": {
+            "course": 2,
+            "title": "Active Listening Skills",
+            "description": "Master the art of active listening",
+            "order": 1
+        }
+    },
+    {
+        "model": "personal_training.lesson",
+        "pk": 1,
+        "fields": {
+            "module": 1,
+            "title": "Mastering Budgeting Basics",
+            "summary": "Learn fundamental budgeting principles and the 50-30-20 rule",
+            "order": 1,
+            "estimated_time_minutes": 45,
+            "is_published": true,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "personal_training.lesson",
+        "pk": 2,
+        "fields": {
+            "module": 2,
+            "title": "Excelling in Active Listening",
+            "summary": "Learn key active listening techniques for professional settings",
+            "order": 1,
+            "estimated_time_minutes": 45,
+            "is_published": true,
+            "created_at": "2024-01-01T00:00:00Z",
+            "updated_at": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "personal_training.learningmaterial",
+        "pk": 1,
+        "fields": {
+            "lesson": 1,
+            "title": "Understanding the 50-30-20 Rule",
+            "content_type": "text",
+            "content": "The 50-30-20 rule is a budgeting principle that suggests allocating your income as follows:\n\n50% for needs (essential expenses)\n30% for wants (non-essential items)\n20% for savings and debt repayment\n\nThis simple framework helps create a balanced and sustainable budget.",
+            "order": 1,
+            "is_required": true
+        }
+    },
+    {
+        "model": "personal_training.learningmaterial",
+        "pk": 2,
+        "fields": {
+            "lesson": 1,
+            "title": "Practical Budgeting Examples",
+            "content_type": "text",
+            "content": "Example 1: Monthly Income of $3000\n- Needs ($1500): Rent, utilities, groceries, insurance\n- Wants ($900): Entertainment, dining out, hobbies\n- Savings ($600): Emergency fund, retirement, goals\n\nExample 2: Monthly Income of $5000\n- Needs ($2500): Housing, transportation, healthcare\n- Wants ($1500): Travel, shopping, recreation\n- Savings ($1000): Investments, future plans",
+            "order": 2,
+            "is_required": true
+        }
+    },
+    {
+        "model": "personal_training.learningmaterial",
+        "pk": 3,
+        "fields": {
+            "lesson": 2,
+            "title": "Core Active Listening Principles",
+            "content_type": "text",
+            "content": "Active listening involves:\n1. Maintaining eye contact\n2. Using non-verbal cues to show engagement\n3. Avoiding interruption\n4. Asking clarifying questions\n5. Paraphrasing to confirm understanding\n\nThese techniques help build trust and ensure clear communication.",
+            "order": 1,
+            "is_required": true
+        }
+    },
+    {
+        "model": "personal_training.learningmaterial",
+        "pk": 4,
+        "fields": {
+            "lesson": 2,
+            "title": "Professional Listening Scenarios",
+            "content_type": "text",
+            "content": "Common workplace scenarios requiring active listening:\n1. Team meetings and presentations\n2. One-on-one feedback sessions\n3. Client consultations\n4. Problem-solving discussions\n5. Performance reviews",
+            "order": 2,
+            "is_required": true
+        }
+    }
+] 

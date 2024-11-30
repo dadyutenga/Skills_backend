@@ -1,40 +1,140 @@
-{% extends "personal_training/base.html" %}
+{% extends "base.html" %}
+
+{% block title %}Generate Quiz{% endblock %}
 
 {% block content %}
-<div class="container mx-auto px-4 py-8">
-    <div class="max-w-2xl mx-auto">
-        <h1 class="text-2xl font-bold mb-6">Generate New Quiz</h1>
-
-        <form method="post" class="space-y-4">
-            {% csrf_token %}
+<div class="max-w-2xl mx-auto px-4">
+    <div class="bg-white shadow sm:rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+            <h1 class="text-2xl font-semibold text-gray-900 mb-6">Generate Quiz</h1>
             
-            {% if form.non_field_errors %}
-            <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
-                {{ form.non_field_errors }}
+            <form id="quizForm" method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <div class="space-y-2">
+                    <label for="lesson_id" class="block text-sm font-medium text-gray-700">
+                        Select Lesson
+                    </label>
+                    <select 
+                        id="lesson_id"
+                        name="lesson_id" 
+                        required 
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    >
+                        <option value="">Choose a lesson...</option>
+                        {% for lesson in lessons %}
+                            <option value="{{ lesson.id }}">
+                                {{ lesson.module.course.title }} - {{ lesson.title }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="flex justify-end">
+                    <button 
+                        type="submit" 
+                        id="submitBtn"
+                        class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                    >
+                        Generate Quiz
+                    </button>
+                </div>
+            </form>
+            
+            <div id="loading" class="mt-6 hidden">
+                <div class="flex items-center justify-center">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+                    <span class="ml-2">Generating quiz...</span>
+                </div>
             </div>
-            {% endif %}
+            
+            <div id="result" class="mt-6 hidden">
+                <div class="rounded-md bg-green-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-green-800">Success</h3>
+                            <div class="mt-2 text-sm text-green-700">
+                                <p id="resultMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-            {% for field in form %}
-            <div class="form-group">
-                <label class="block text-sm font-medium text-gray-700">
-                    {{ field.label }}
-                </label>
-                {{ field }}
-                {% if field.errors %}
-                <p class="text-red-500 text-sm mt-1">{{ field.errors.0 }}</p>
-                {% endif %}
+            <div id="error" class="mt-6 hidden">
+                <div class="rounded-md bg-red-50 p-4">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">Error</h3>
+                            <div class="mt-2 text-sm text-red-700">
+                                <p id="errorMessage"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
-            {% endfor %}
-
-            <div class="flex justify-end space-x-4">
-                <a href="{% url 'quiz-list' %}" class="bg-gray-500 text-white px-4 py-2 rounded">
-                    Cancel
-                </a>
-                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
-                    Generate Quiz
-                </button>
-            </div>
-        </form>
+        </div>
     </div>
 </div>
+
+<script>
+document.getElementById('quizForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitBtn = document.getElementById('submitBtn');
+    const loadingDiv = document.getElementById('loading');
+    const resultDiv = document.getElementById('result');
+    const errorDiv = document.getElementById('error');
+    const resultMessage = document.getElementById('resultMessage');
+    const errorMessage = document.getElementById('errorMessage');
+    
+    // Disable submit button and show loading
+    submitBtn.disabled = true;
+    loadingDiv.classList.remove('hidden');
+    resultDiv.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    
+    try {
+        const response = await fetch(form.action, {
+            method: 'POST',
+            body: new FormData(form),
+            headers: {
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultMessage.textContent = data.message;
+            resultDiv.classList.remove('hidden');
+            errorDiv.classList.add('hidden');
+        } else {
+            errorMessage.textContent = data.error;
+            errorDiv.classList.remove('hidden');
+            resultDiv.classList.add('hidden');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        errorMessage.textContent = 'An unexpected error occurred';
+        errorDiv.classList.remove('hidden');
+        resultDiv.classList.add('hidden');
+    } finally {
+        // Re-enable submit button and hide loading
+        submitBtn.disabled = false;
+        loadingDiv.classList.add('hidden');
+    }
+});
+</script>
 {% endblock %} 
