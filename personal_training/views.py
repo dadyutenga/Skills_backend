@@ -14,10 +14,11 @@ from typing import Dict, Optional
 async def generate_quiz(request):
     if request.method == 'POST':
         try:
+            # Parse the JSON data from request
             data = json.loads(request.body)
             lesson_id = data.get('lesson_id')
-            question_types = data.get('question_types', {'mcq': 5})
             difficulty = data.get('difficulty', 'intermediate')
+            question_types = data.get('question_types', {'mcq': 5})
             
             if not lesson_id:
                 return JsonResponse({'error': 'Lesson ID is required'}, status=400)
@@ -48,7 +49,7 @@ async def generate_quiz(request):
                 topic=content,
                 question_types=question_types,
                 difficulty=difficulty,
-                user_id=request.user.id
+                user_id=request.user.id if request.user.is_authenticated else None
             )
             
             # Create and save the quiz

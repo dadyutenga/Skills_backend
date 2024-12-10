@@ -29,6 +29,38 @@
                         {% endfor %}
                     </select>
                 </div>
+
+                <div class="space-y-2">
+                    <label for="difficulty" class="block text-sm font-medium text-gray-700">
+                        Difficulty Level
+                    </label>
+                    <select 
+                        id="difficulty"
+                        name="difficulty" 
+                        required 
+                        class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                    >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate" selected>Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                    </select>
+                </div>
+
+                <div class="space-y-2">
+                    <label class="block text-sm font-medium text-gray-700">Question Types</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label for="mcq_count" class="block text-sm text-gray-600">MCQ Questions</label>
+                            <input type="number" id="mcq_count" name="mcq_count" value="3" min="0" max="10"
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        </div>
+                        <div>
+                            <label for="scenario_count" class="block text-sm text-gray-600">Scenario Questions</label>
+                            <input type="number" id="scenario_count" name="scenario_count" value="2" min="0" max="5"
+                                class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                        </div>
+                    </div>
+                </div>
                 
                 <div class="flex justify-end">
                     <button 
@@ -106,12 +138,26 @@ document.getElementById('quizForm').addEventListener('submit', async (e) => {
     errorDiv.classList.add('hidden');
     
     try {
+        // Create the question_types object
+        const mcqCount = parseInt(form.querySelector('#mcq_count').value) || 0;
+        const scenarioCount = parseInt(form.querySelector('#scenario_count').value) || 0;
+        
+        const formData = {
+            lesson_id: form.querySelector('#lesson_id').value,
+            difficulty: form.querySelector('#difficulty').value,
+            question_types: {
+                mcq: mcqCount,
+                scenario: scenarioCount
+            }
+        };
+
         const response = await fetch(form.action, {
             method: 'POST',
-            body: new FormData(form),
             headers: {
-                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value
-            }
+                'X-CSRFToken': form.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
         });
         
         const data = await response.json();
@@ -121,7 +167,7 @@ document.getElementById('quizForm').addEventListener('submit', async (e) => {
             resultDiv.classList.remove('hidden');
             errorDiv.classList.add('hidden');
         } else {
-            errorMessage.textContent = data.error;
+            errorMessage.textContent = data.error || 'An error occurred';
             errorDiv.classList.remove('hidden');
             resultDiv.classList.add('hidden');
         }
