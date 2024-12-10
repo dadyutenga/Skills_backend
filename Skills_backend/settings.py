@@ -200,3 +200,5 @@ SESSION_COOKIE_HTTPONLY = True
 
 AUTH0_CALLBACK_URL = "http://localhost:8000/auth/callback/"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
+
+LOGIN_URL = '/auth/login/'  # This should match your Auth0 login URL

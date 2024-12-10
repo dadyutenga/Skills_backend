@@ -1,27 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>{% block title %}Quiz System{% endblock %}</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Personal Training</title>
 </head>
 <body>
-    <div class="min-h-screen bg-gray-100">
-        <nav class="bg-white shadow-lg">
-            <div class="max-w-7xl mx-auto px-4">
-                <div class="flex justify-between">
-                    <div class="flex space-x-7">
-                        <div class="py-4">
-                            <a href="{% url 'personal_training:quiz-list' %}" class="text-lg font-semibold">Quiz System</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </nav>
-        
-        <main class="container mx-auto px-4 py-8">
-            {% block content %}
-            {% endblock %}
-        </main>
-    </div>
+    <nav>
+        <!-- Remove any auth-required navigation items -->
+        <a href="{% url 'personal_training:quiz_list' %}">Quizzes</a>
+    </nav>
+    
+    {% block content %}
+    {% endblock %}
 </body>
 </html> 

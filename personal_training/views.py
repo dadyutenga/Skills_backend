@@ -1,7 +1,6 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.db.models import Avg
-from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from .models import (
     Lesson, LearningMaterial, Quiz, Question, Choice,
@@ -12,7 +11,6 @@ from asgiref.sync import sync_to_async
 import json
 from typing import Dict, Optional
 
-@login_required
 async def generate_quiz(request):
     if request.method == 'POST':
         try:
@@ -123,7 +121,6 @@ async def generate_quiz(request):
         'lessons': lessons
     })
 
-@login_required
 @require_http_methods(["POST"])
 async def submit_quiz_answer(request, quiz_id):
     """Handle quiz answer submission and generate feedback."""
@@ -187,7 +184,6 @@ async def submit_quiz_answer(request, quiz_id):
             'error': str(e)
         }, status=500)
 
-@login_required
 @require_http_methods(["POST"])
 async def complete_quiz(request, quiz_id):
     """Handle quiz completion and update user history."""
@@ -249,29 +245,52 @@ async def complete_quiz(request, quiz_id):
             'error': str(e)
         }, status=500)
 
-@login_required
 def quiz_list(request):
     """View to display list of all quizzes."""
-    quizzes = Quiz.objects.select_related('learning_material__lesson__module__course')
+    quizzes = Quiz.objects.select_related(
+        'learning_material'
+    ).only(
+        'id',
+        'learning_material__title',
+        'passing_score',
+        'max_attempts',
+        'time_limit_minutes'
+    )
     return render(request, 'personal_training/quiz_list.html', {
         'quizzes': quizzes
     })
 
-@login_required
 def quiz_detail(request, pk):
     """View to display a specific quiz."""
-    quiz = get_object_or_404(Quiz.objects.select_related(
-        'learning_material__lesson__module__course'
-    ), pk=pk)
+    quiz = get_object_or_404(
+        Quiz.objects.select_related(
+            'learning_material'
+        ).only(
+            'id',
+            'learning_material__title',
+            'passing_score',
+            'max_attempts',
+            'time_limit_minutes'
+        ),
+        pk=pk
+    )
     
-    # Get user's quiz history
-    history = UserQuizHistory.objects.filter(
-        user=request.user,
-        quiz=quiz
-    ).first()
+    # Get user's quiz history only if user is authenticated
+    history = None
+    if request.user.is_authenticated:
+        history = UserQuizHistory.objects.filter(
+            user=request.user,
+            quiz=quiz
+        ).first()
     
-    # Get questions with appropriate difficulty
-    questions = quiz.questions.all()
+    # Only fetch fields that exist in the database
+    questions = quiz.questions.all().only(
+        'id',
+        'question_text',
+        'explanation',
+        'order',
+        'points'
+    )
     
     return render(request, 'personal_training/quiz_detail.html', {
         'quiz': quiz,
@@ -283,11 +302,9 @@ def quiz_generate(request):
     """View to handle quiz generation"""
     if request.method == 'POST':
         lesson_id = request.POST.get('lesson_id')
-        # Add your quiz generation logic here
         return JsonResponse({'success': True, 'message': 'Quiz generated successfully'})
     
-    # For GET requests, show the form
-    lessons = Lesson.objects.all()  # You'll need to import Lesson model
+    lessons = Lesson.objects.all()
     return render(request, 'personal_training/quiz_generation.html', {
         'lessons': lessons
     })
