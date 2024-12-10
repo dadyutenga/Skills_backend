@@ -71,7 +71,9 @@ ROOT_URLCONF = 'Skills_backend.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            BASE_DIR / 'templates',
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -197,3 +199,4 @@ SESSION_COOKIE_SAMESITE = 'Lax'  # Use 'Strict' in production
 SESSION_COOKIE_HTTPONLY = True
 
 AUTH0_CALLBACK_URL = "http://localhost:8000/auth/callback/"
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")

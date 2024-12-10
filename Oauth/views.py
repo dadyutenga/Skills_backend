@@ -7,6 +7,7 @@ from django.urls import reverse
 from authlib.integrations.django_client import OAuth
 from urllib.parse import quote_plus, urlencode
 import logging
+from .models import User
 
 logger = logging.getLogger(__name__)
 
@@ -49,13 +50,28 @@ def callback(request):
     
     try:
         token = oauth.auth0.authorize_access_token(request)
+        userinfo = token['userinfo']
+        
+        # Create or update user in database
+        user, created = User.objects.update_or_create(
+            auth0_id=userinfo['sub'],
+            defaults={
+                'name': userinfo['name'],
+                'email': userinfo['email'],
+                'picture': userinfo['picture']
+            }
+        )
         
         # Store user info in session
         request.session['user'] = {
-            'name': token['userinfo']['name'],
-            'email': token['userinfo']['email'],
-            'picture': token['userinfo']['picture'],
-            'sub': token['userinfo']['sub']
+            'id': str(user.id),
+            'auth0_id': user.auth0_id,
+            'name': user.name,
+            'email': user.email,
+            'picture': user.picture,
+            'bio': user.bio,
+            'phone': user.phone,
+            'location': user.location
         }
         
         # Redirect to React frontend dashboard
@@ -64,7 +80,6 @@ def callback(request):
         
     except Exception as e:
         logger.error(f"Callback error: {str(e)}")
-        # Redirect to frontend login page on error
         return redirect('http://localhost:3000/login?error=auth_failed')
 
 @api_view(['GET', 'OPTIONS'])
@@ -104,24 +119,33 @@ def logout(request):
 @api_view(['GET'])
 def get_profile(request):
     try:
-        user = request.session.get('user')
-        if not user:
+        session_user = request.session.get('user')
+        if not session_user:
             return Response(
                 {"error": "Not authenticated"}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
+        
+        try:
+            user = User.objects.get(id=session_user['id'])
+            profile_data = {
+                'id': str(user.id),
+                'name': user.name,
+                'email': user.email,
+                'picture': user.picture,
+                'bio': user.bio,
+                'phone': user.phone,
+                'location': user.location,
+                'age': user.age,
+                'specialization': user.specialization
+            }
+            return Response(profile_data)
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
             
-        profile_data = {
-            'name': user.get('name', ''),
-            'email': user.get('email', ''),
-            'picture': user.get('picture', ''),
-            'bio': user.get('bio', ''),
-            'phone': user.get('phone', ''),
-            'location': user.get('location', '')
-        }
-        
-        return Response(profile_data)
-        
     except Exception as e:
         logger.error(f"Get profile error: {str(e)}")
         return Response(
@@ -132,28 +156,52 @@ def get_profile(request):
 @api_view(['PUT'])
 def update_profile(request):
     try:
-        user = request.session.get('user')
-        if not user:
+        session_user = request.session.get('user')
+        if not session_user:
             return Response(
                 {"error": "Not authenticated"}, 
                 status=status.HTTP_401_UNAUTHORIZED
             )
             
-        # Update user data in session
-        user.update({
-            'name': request.data.get('name', user.get('name')),
-            'email': request.data.get('email', user.get('email')),
-            'picture': request.data.get('picture', user.get('picture')),
-            'bio': request.data.get('bio', user.get('bio')),
-            'phone': request.data.get('phone', user.get('phone')),
-            'location': request.data.get('location', user.get('location'))
-        })
-        
-        request.session['user'] = user
-        request.session.modified = True
-        
-        return Response(user)
-        
+        try:
+            user = User.objects.get(id=session_user['id'])
+            
+            # Update user data in database
+            user.name = request.data.get('name', user.name)
+            user.email = request.data.get('email', user.email)
+            user.picture = request.data.get('picture', user.picture)
+            user.bio = request.data.get('bio', user.bio)
+            user.phone = request.data.get('phone', user.phone)
+            user.location = request.data.get('location', user.location)
+            user.age = request.data.get('age', user.age)
+            user.specialization = request.data.get('specialization', user.specialization)
+            user.save()
+            
+            # Update session data
+            request.session['user'] = {
+                'id': str(user.id),
+                'auth0_id': user.auth0_id,
+                'name': user.name,
+                'email': user.email,
+                'picture': user.picture,
+                'bio': user.bio,
+                'phone': user.phone,
+                'location': user.location,
+                'age': user.age,
+                'specialization': user.specialization
+            }
+            
+            return Response({
+                "message": "Profile updated successfully",
+                "user": request.session['user']
+            })
+            
+        except User.DoesNotExist:
+            return Response(
+                {"error": "User not found"}, 
+                status=status.HTTP_404_NOT_FOUND
+            )
+            
     except Exception as e:
         logger.error(f"Update profile error: {str(e)}")
         return Response(
