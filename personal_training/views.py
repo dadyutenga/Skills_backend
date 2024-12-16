@@ -6,7 +6,7 @@ from .models import (
     Lesson, LearningMaterial, Quiz, Question, Choice,
     QuizAttempt, UserQuizHistory
 )
-from .services.quiz_generator import QuizGenerationService
+from .services.quiz_module import QuizGenerationService
 from asgiref.sync import sync_to_async
 import json
 from typing import Dict, Optional
