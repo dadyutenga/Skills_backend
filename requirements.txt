@@ -1,0 +1,35 @@
+# Django and Django REST framework
+Django>=5.1.2
+djangorestframework>=3.14.0
+
+
+# GraphQL related
+graphene-django>=3.1.5
+django-graphql-jwt>=0.4.0
+django-filter>=23.5
+
+# Authentication and Security
+python-dotenv>=1.0.0
+django-cors-headers>=4.3.1
+authlib>=1.3.0
+python-jose>=3.3.0  # Required for Auth0 JWT token handling
+auth0-python>=4.4.0  # Official Auth0 Python SDK
+requests>=2.31.0  # Required for making HTTP requests to Auth0
+
+# CORS and Security
+django-cors-headers>=4.3.1
+django-cookie-law>=2.2.0  # Optional: for cookie consent
+django-csp>=3.7  # Optional: for Content Security Policy
+
+# Channels for WebSocket support
+channels>=4.0.0
+
+# Development and Extensions
+django-extensions>=3.2.3
+
+# Google Gemini API
+google-generativeai>=0.3.0
+
+# Optional but recommended packages
+whitenoise>=6.6.0  # for static files handling
+django-environ>=0.11.2  # for better environment management
