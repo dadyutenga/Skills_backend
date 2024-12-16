@@ -4,4 +4,4 @@ from .progress_tracking  import ProgressTrackingService
 from .feedback_module import FeedbackModule
 from .demo import DemoService
 from .video_embeded import VideoEmbededService
-from .articles import artilcleservice
+from .articles import ArticleService  # Updated from artilcleservice
