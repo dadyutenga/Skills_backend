@@ -3,49 +3,6 @@
 
 This guide explains how to use the Internet Archive APIs to retrieve articles from the Internet Archive and display them in a Django web application. We will leverage Python and Django to integrate these APIs.
 
----
-
-## Prerequisites
-
-- Python 3.6+
-- Django 3.2+
-- Requests library for Python (`pip install requests`)
-
----
-
-## Step 1: Setup Django Project
-
-1. Create a Django project and app:
-   ```bash
-   django-admin startproject archive_project
-   cd archive_project
-   python manage.py startapp archive_app
-   ```
-
-2. Add the app to the `INSTALLED_APPS` in `settings.py`:
-   ```python
-   INSTALLED_APPS = [
-       ...,
-       'archive_app',
-   ]
-   ```
-
----
-
-## Step 2: Install Required Libraries
-
-Install the `requests` library for making API calls:
-```bash
-pip install requests
-```
-
-For advanced integration, you can also install the `internetarchive` Python package:
-```bash
-pip install internetarchive
-```
-
----
-
 ## Step 3: Fetch Articles Using the Internet Archive APIs
 
 ### 3.1 Using the Item Metadata API

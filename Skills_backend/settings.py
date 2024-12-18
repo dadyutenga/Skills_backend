@@ -164,9 +164,7 @@ AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
 
 FRONTEND_URL = "http://localhost:3000"  # Your React app URL
 
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-]
+CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOW_CREDENTIALS = True
 
@@ -202,3 +200,13 @@ AUTH0_CALLBACK_URL = "http://localhost:8000/auth/callback/"
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY")
 
 LOGIN_URL = '/auth/login/'  # This should match your Auth0 login URL
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django_redis.cache.RedisCache',
+        'LOCATION': 'redis://127.0.0.1:6379/1',
+        'OPTIONS': {
+            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+        }
+    }
+}   

@@ -10,11 +10,7 @@ class ArticleService:
     def create_article(self):
         pass
 
-    def update_article(self):
-        pass
 
-    def delete_article(self):
-        pass
 
     def list_articles(self):
         pass
