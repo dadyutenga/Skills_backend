@@ -1,5 +1,5 @@
 class ArticleService:
-    """Service for handling article-related functionality"""
+   
     
     def __init__(self):
         pass
