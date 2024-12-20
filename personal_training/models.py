@@ -1,6 +1,7 @@
 from django.db import models
 import uuid
 from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 
 class Category(models.Model):
     """Course categories with enhanced metadata"""
@@ -44,7 +45,11 @@ class Course(models.Model):
     # Age restrictions directly in course
     min_age = models.PositiveIntegerField(default=5)
     max_age = models.PositiveIntegerField(default=100)
-    age_group = models.CharField(max_length=20, choices=AGE_GROUP_CHOICES)
+    age_group = models.CharField(
+        max_length=20, 
+        choices=AGE_GROUP_CHOICES,
+        default='adult'
+    )
     
     # Media fields
     thumbnail = models.URLField(max_length=500, blank=True)
@@ -99,8 +104,12 @@ class Module(models.Model):
     course = models.ForeignKey(Course, related_name='modules', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
-    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES)
-    content = models.TextField()
+    content_type = models.CharField(
+        max_length=20, 
+        choices=CONTENT_TYPES,
+        default='text'  # Default content type
+    )
+    content = models.TextField(blank=True, default='')  # Make content optional with empty default
     order = models.PositiveIntegerField()
     
     # Media fields
@@ -112,7 +121,7 @@ class Module(models.Model):
     is_required = models.BooleanField(default=True)
     is_preview = models.BooleanField(default=False)
     is_published = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)  # Changed from auto_now_add
     updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:

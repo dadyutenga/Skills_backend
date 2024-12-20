@@ -228,12 +228,72 @@ class ProgressTrackingService:
         if not self._prerequisites_completed(module):
             raise ValidationError("Module prerequisites not completed")
 
-    def _initialize_redis_client(self):
-        """Initialize Redis client with proper configuration"""
-        # Redis initialization code here
-        pass
+   
 
     def _log_error(self, error_message: str) -> None:
-        """Log error with proper context"""
-        # Error logging code here
-        pass
+        """
+        Log error with comprehensive context and metrics
+        
+        Args:
+            error_message: Primary error message to log
+        """
+        try:
+            logger = logging.getLogger(__name__)
+            
+            # Gather detailed context
+            error_context = {
+                'user_id': str(self.user.id),
+                'user_email': self.user.email,
+                'timestamp': datetime.now().isoformat(),
+                'service': 'ProgressTrackingService',
+                'environment': settings.ENVIRONMENT,
+                'error': error_message,
+                'stack_trace': traceback.format_exc(),
+                'session_data': {
+                    'last_activity': self.user.last_login.isoformat() if self.user.last_login else None,
+                    'current_course': getattr(self, '_current_course_id', None),
+                    'current_module': getattr(self, '_current_module_id', None),
+                    'progress_cache_status': bool(self.redis_client.ping())
+                },
+                'performance_metrics': {
+                    'memory_usage': self._get_memory_usage(),
+                    'cache_hits': self.redis_client.info().get('keyspace_hits', 0),
+                    'cache_misses': self.redis_client.info().get('keyspace_misses', 0)
+                }
+            }
+
+            # Log to different streams based on error severity
+            if 'CRITICAL' in error_message.upper() or 'FATAL' in error_message.upper():
+                logger.critical(
+                    f"CRITICAL Progress Tracking Error: {error_message}",
+                    extra=error_context,
+                    exc_info=True
+                )
+                # Alert DevOps for critical errors
+                self._alert_devops(error_context)
+                
+            elif 'WARNING' in error_message.upper():
+                logger.warning(
+                    f"Progress Tracking Warning: {error_message}",
+                    extra=error_context
+                )
+            else:
+                logger.error(
+                    f"Progress Tracking Error: {error_message}",
+                    extra=error_context,
+                    exc_info=True
+                )
+
+            # Store error in Redis for real-time monitoring
+            self._cache_error(error_context)
+            
+            # Update error metrics
+            self._update_error_metrics(error_context)
+
+        except Exception as e:
+            # Fallback logging if main logging fails
+            fallback_logger = logging.getLogger('fallback')
+            fallback_logger.error(
+                f"Fallback Error Log - Original: {error_message}, Logging Error: {str(e)}",
+                exc_info=True
+            )

@@ -4,13 +4,15 @@ import json
 import os
 from asgiref.sync import sync_to_async
 from typing import Dict, List, Optional
-from ..models import Quiz, UserQuizHistory
+from django_redis import get_redis_connection
+from datetime import datetime
 
 class QuizGenerationService:
     def __init__(self):
         api_key = os.getenv('GEMINI_API_KEY') or settings.GEMINI_API_KEY
         genai.configure(api_key=api_key)
         self.model = genai.GenerativeModel('gemini-pro')
+        self.redis_client = get_redis_connection("default")
 
     def _format_prompt(self, content: str, question_types: Dict[str, int], difficulty: str) -> str:
         type_descriptions = {
@@ -172,36 +174,76 @@ class QuizGenerationService:
             raise ValueError(f"Quiz generation failed: {str(e)}")
             
     async def _get_adaptive_difficulty(self, user_id: int, quiz_id: int, default_difficulty: str) -> str:
-        """Determine appropriate difficulty level based on user's quiz history."""
+        """Determine appropriate difficulty level based on user's quiz history from Redis"""
         try:
-            history = await sync_to_async(UserQuizHistory.objects.get)(
-                user_id=user_id,
-                quiz_id=quiz_id
-            )
+            # Get quiz history from Redis
+            history_key = f"quiz:history:{user_id}:{quiz_id}"
+            history = self.redis_client.get(history_key)
             
-            # If user consistently scores high, increase difficulty
-            if history.average_score >= 90 and len(history.performance_trend) >= 3:
-                recent_scores = history.performance_trend[-3:]
-                if all(score >= 85 for score in recent_scores):
-                    if default_difficulty == 'beginner':
-                        return 'intermediate'
-                    elif default_difficulty == 'intermediate':
-                        return 'advanced'
-                        
-            # If user consistently scores low, decrease difficulty
-            elif history.average_score <= 60 and len(history.performance_trend) >= 3:
-                recent_scores = history.performance_trend[-3:]
-                if all(score <= 65 for score in recent_scores):
-                    if default_difficulty == 'advanced':
-                        return 'intermediate'
-                    elif default_difficulty == 'intermediate':
-                        return 'beginner'
-                        
-        except UserQuizHistory.DoesNotExist:
-            pass
+            if history:
+                history_data = json.loads(history)
+                average_score = history_data.get('average_score', 0)
+                performance_trend = history_data.get('performance_trend', [])
+                
+                # Rest of the logic remains the same
+                if average_score >= 90 and len(performance_trend) >= 3:
+                    recent_scores = performance_trend[-3:]
+                    if all(score >= 85 for score in recent_scores):
+                        if default_difficulty == 'beginner':
+                            return 'intermediate'
+                        elif default_difficulty == 'intermediate':
+                            return 'advanced'
+                            
+                elif average_score <= 60 and len(performance_trend) >= 3:
+                    recent_scores = performance_trend[-3:]
+                    if all(score <= 65 for score in recent_scores):
+                        if default_difficulty == 'advanced':
+                            return 'intermediate'
+                        elif default_difficulty == 'intermediate':
+                            return 'beginner'
+                            
+        except Exception as e:
+            self._log_error(f"Error getting adaptive difficulty: {str(e)}")
             
         return default_difficulty
+
+    def _store_quiz_result(self, user_id: int, quiz_id: int, score: float):
+        """Store quiz results in Redis"""
+        try:
+            history_key = f"quiz:history:{user_id}:{quiz_id}"
+            existing_history = self.redis_client.get(history_key)
             
+            if existing_history:
+                history_data = json.loads(existing_history)
+                scores = history_data.get('performance_trend', [])
+                scores.append(score)
+                
+                # Keep only last 10 scores
+                if len(scores) > 10:
+                    scores = scores[-10:]
+                    
+                history_data.update({
+                    'average_score': sum(scores) / len(scores),
+                    'performance_trend': scores,
+                    'last_attempt': datetime.now().isoformat()
+                })
+            else:
+                history_data = {
+                    'average_score': score,
+                    'performance_trend': [score],
+                    'last_attempt': datetime.now().isoformat()
+                }
+            
+            # Store with expiry (e.g., 30 days)
+            self.redis_client.setex(
+                history_key,
+                2592000,  # 30 days in seconds
+                json.dumps(history_data)
+            )
+            
+        except Exception as e:
+            self._log_error(f"Error storing quiz result: {str(e)}")
+
     async def generate_feedback(self, user_answer: str, correct_answer: str, 
                               question_type: str, context: Optional[str] = None) -> str:
         """Generate personalized feedback for a user's answer."""
