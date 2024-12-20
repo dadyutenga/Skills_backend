@@ -4,6 +4,10 @@ from django.db.models import Avg, Count, Q, F, Sum
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
+import logging
+import traceback
+from django.conf import settings
+from django_redis import get_redis_connection
 
 from personal_training.models import Course, Module
 from Oauth.models import User

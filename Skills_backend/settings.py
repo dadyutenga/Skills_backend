@@ -95,7 +95,7 @@ WSGI_APPLICATION = 'Skills_backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'skill_db',
+        'NAME': 'skill_backend',
         'USER': 'postgres',
         'PASSWORD': '123456789',
         'HOST': 'localhost',
