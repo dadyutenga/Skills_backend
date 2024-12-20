@@ -1,13 +1,14 @@
 from django.db import models
-from django.contrib.auth.models import User
+import uuid
 from django.core.validators import MinValueValidator, MaxValueValidator
-from django.db.models import Avg
 
 class Category(models.Model):
-    """Course categories like 'Financial Literacy', 'Communication Skills', etc."""
+    """Course categories with enhanced metadata"""
     name = models.CharField(max_length=100)
     description = models.TextField()
     slug = models.SlugField(unique=True)
+    icon = models.URLField(max_length=500, blank=True)  # Category icon URL
+    featured = models.BooleanField(default=False)
     
     class Meta:
         verbose_name_plural = "Categories"
@@ -17,7 +18,21 @@ class Category(models.Model):
         return self.name
 
 class Course(models.Model):
-    """Main course model containing general course information"""
+    """Enhanced course model with direct age restrictions and media"""
+    DIFFICULTY_CHOICES = [
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Intermediate'),
+        ('professional', 'Professional')
+    ]
+
+    AGE_GROUP_CHOICES = [
+        ('children', 'Children (5-12)'),
+        ('teenager', 'Teenager (13-17)'),
+        ('young_adult', 'Young Adult (18-25)'),
+        ('adult', 'Adult (26-50)'),
+        ('senior', 'Senior (51+)')
+    ]
+
     category = models.ForeignKey(Category, related_name='courses', on_delete=models.PROTECT)
     title = models.CharField(max_length=200)
     slug = models.SlugField(unique=True)
@@ -25,15 +40,20 @@ class Course(models.Model):
     learning_objectives = models.TextField()
     prerequisites = models.TextField(blank=True)
     duration_hours = models.PositiveIntegerField(help_text="Estimated hours to complete")
-    difficulty_level = models.CharField(
-        max_length=20,
-        choices=[
-            ('beginner', 'Beginner'),
-            ('intermediate', 'Intermediate'),
-            ('advanced', 'Advanced')
-        ]
-    )
+    
+    # Age restrictions directly in course
+    min_age = models.PositiveIntegerField(default=5)
+    max_age = models.PositiveIntegerField(default=100)
+    age_group = models.CharField(max_length=20, choices=AGE_GROUP_CHOICES)
+    
+    # Media fields
+    thumbnail = models.URLField(max_length=500, blank=True)
+    preview_video = models.URLField(max_length=500, blank=True)
+    
+    # Course metadata
+    difficulty_level = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES)
     is_active = models.BooleanField(default=True)
+    is_featured = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -43,12 +63,57 @@ class Course(models.Model):
     def __str__(self):
         return self.title
 
+    def is_age_appropriate(self, user_age: int) -> bool:
+        """Check if course is appropriate for user's age"""
+        return self.min_age <= user_age <= self.max_age
+
+class UserCourseEnrollment(models.Model):
+    """Track user enrollment and progress in courses"""
+    user = models.ForeignKey('Oauth.User', related_name='enrollments', on_delete=models.CASCADE)
+    course = models.ForeignKey(Course, related_name='enrollments', on_delete=models.CASCADE)
+    enrolled_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+    progress_percentage = models.FloatField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    last_accessed = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ['user', 'course']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.course.title}"
+
 class Module(models.Model):
-    """Course modules - organizational units containing lessons"""
+    """Enhanced module model with integrated learning materials"""
+    CONTENT_TYPES = [
+        ('text', 'Text Content'),
+        ('video', 'Video'),
+        ('article', 'Article'),
+        ('infographic', 'Infographic'),
+        ('interactive', 'Interactive Content')
+    ]
+
     course = models.ForeignKey(Course, related_name='modules', on_delete=models.CASCADE)
     title = models.CharField(max_length=200)
     description = models.TextField()
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES)
+    content = models.TextField()
     order = models.PositiveIntegerField()
+    
+    # Media fields
+    thumbnail = models.URLField(max_length=500, blank=True)
+    media_url = models.URLField(max_length=500, blank=True)
+    
+    # Module metadata
+    duration_minutes = models.PositiveIntegerField(default=0)
+    is_required = models.BooleanField(default=True)
+    is_preview = models.BooleanField(default=False)
+    is_published = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     
     class Meta:
         ordering = ['course', 'order']
@@ -57,200 +122,21 @@ class Module(models.Model):
     def __str__(self):
         return f"{self.course.title} - Module {self.order}: {self.title}"
 
-class Lesson(models.Model):
-    """Individual lessons within modules"""
-    module = models.ForeignKey(Module, related_name='lessons', on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    summary = models.TextField()
-    order = models.PositiveIntegerField()
-    estimated_time_minutes = models.PositiveIntegerField()
-    is_published = models.BooleanField(default=False)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['module', 'order']
-        unique_together = [['module', 'order']]
-
-    def __str__(self):
-        return f"{self.module.course.title} - {self.title}"
-
-class LearningMaterial(models.Model):
-    """Content items within lessons"""
-    lesson = models.ForeignKey(Lesson, related_name='materials', on_delete=models.CASCADE)
-    title = models.CharField(max_length=200)
-    content_type = models.CharField(
-        max_length=20,
-        choices=[
-            ('text', 'Text Content'),
-            ('video', 'Video'),
-            ('article', 'Article'),
-            ('infographic', 'Infographic'),
-            ('quiz', 'Quiz')
-        ]
-    )
-    content = models.TextField()
-    media_url = models.URLField(blank=True, null=True)
-    order = models.PositiveIntegerField()
-    is_required = models.BooleanField(default=True)
-    
-    class Meta:
-        ordering = ['lesson', 'order']
-        unique_together = [['lesson', 'order']]
-
-    def __str__(self):
-        return f"{self.lesson.title} - {self.title}"
-
-class Quiz(models.Model):
-    """Quiz configuration and settings"""
-    learning_material = models.OneToOneField(
-        LearningMaterial, 
-        related_name='quiz_config',
-        on_delete=models.CASCADE
-    )
-    passing_score = models.PositiveIntegerField(
-        validators=[MinValueValidator(0), MaxValueValidator(100)],
-        default=70
-    )
-    max_attempts = models.PositiveIntegerField(default=3)
-    time_limit_minutes = models.PositiveIntegerField(null=True, blank=True)
-    difficulty_level = models.CharField(
-        max_length=20,
-        choices=[
-            ('beginner', 'Beginner'),
-            ('intermediate', 'Intermediate'),
-            ('advanced', 'Advanced')
-        ],
-        default='intermediate'
-    )
-    question_types = models.JSONField(
-        default=dict,
-        help_text="Configuration for question types (e.g., {'mcq': 3, 'scenario': 2})"
-    )
-    adaptive_difficulty = models.BooleanField(
-        default=False,
-        help_text="Whether to adjust difficulty based on user performance"
-    )
-    
-    class Meta:
-        verbose_name_plural = "Quizzes"
-
-    def __str__(self):
-        return f"Quiz: {self.learning_material.title}"
-    
-    def get_average_score(self):
-        return self.attempts.aggregate(Avg('score'))['score__avg'] or 0
-
-class Question(models.Model):
-    """Quiz questions"""
-    quiz = models.ForeignKey(Quiz, related_name='questions', on_delete=models.CASCADE)
-    question_text = models.TextField()
-    explanation = models.TextField(blank=True)
-    order = models.PositiveIntegerField()
-    points = models.PositiveIntegerField(default=1)
-    question_type = models.CharField(
-        max_length=20,
-        choices=[
-            ('mcq', 'Multiple Choice'),
-            ('scenario', 'Scenario Based'),
-            ('application', 'Application Based'),
-            ('reflection', 'Reflective'),
-            ('discussion', 'Discussion')
-        ],
-        default='mcq'
-    )
-    difficulty_level = models.CharField(
-        max_length=20,
-        choices=[
-            ('beginner', 'Beginner'),
-            ('intermediate', 'Intermediate'),
-            ('advanced', 'Advanced')
-        ],
-        default='intermediate'
-    )
-    scenario_context = models.TextField(
-        blank=True,
-        help_text="Additional context for scenario-based questions"
-    )
-    
-    class Meta:
-        ordering = ['quiz', 'order']
-
-    def __str__(self):
-        return f"{self.quiz.learning_material.title} - Question {self.order}"
-
-class Choice(models.Model):
-    """Multiple choice options for quiz questions"""
-    question = models.ForeignKey(Question, related_name='choices', on_delete=models.CASCADE)
-    choice_text = models.CharField(max_length=200)
-    is_correct = models.BooleanField(default=False)
-    explanation = models.TextField(blank=True)
-
-    def __str__(self):
-        return f"{self.question.question_text[:30]} - {self.choice_text}"
-
-class UserProgress(models.Model):
-    """Tracking user progress through the course"""
-    user = models.ForeignKey(User, related_name='course_progress', on_delete=models.CASCADE)
-    lesson = models.ForeignKey(Lesson, related_name='user_progress', on_delete=models.CASCADE)
+class UserModuleProgress(models.Model):
+    """Track user progress through modules"""
+    user = models.ForeignKey('Oauth.User', related_name='module_progress', on_delete=models.CASCADE)
+    module = models.ForeignKey(Module, related_name='user_progress', on_delete=models.CASCADE)
+    enrollment = models.ForeignKey(UserCourseEnrollment, related_name='module_progress', on_delete=models.CASCADE)
     started_at = models.DateTimeField(auto_now_add=True)
     completed_at = models.DateTimeField(null=True, blank=True)
-    is_completed = models.BooleanField(default=False)
+    progress_percentage = models.FloatField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
     last_accessed = models.DateTimeField(auto_now=True)
 
     class Meta:
-        unique_together = ['user', 'lesson']
+        unique_together = ['user', 'module']
 
     def __str__(self):
-        return f"{self.user.username} - {self.lesson.title}"
-
-class QuizAttempt(models.Model):
-    """Recording user attempts at quizzes"""
-    user = models.ForeignKey(User, related_name='quiz_attempts', on_delete=models.CASCADE)
-    quiz = models.ForeignKey(Quiz, related_name='attempts', on_delete=models.CASCADE)
-    score = models.PositiveIntegerField()
-    started_at = models.DateTimeField(auto_now_add=True)
-    completed_at = models.DateTimeField(null=True, blank=True)
-    attempt_number = models.PositiveIntegerField()
-    feedback = models.JSONField(
-        default=dict,
-        help_text="AI-generated feedback for each question"
-    )
-    performance_metrics = models.JSONField(
-        default=dict,
-        help_text="Detailed metrics about user performance"
-    )
-
-    class Meta:
-        unique_together = ['user', 'quiz', 'attempt_number']
-
-    def __str__(self):
-        return f"{self.user.username} - {self.quiz.learning_material.title} (Attempt {self.attempt_number})"
-
-class UserQuizHistory(models.Model):
-    """Track user's quiz performance history for adaptive difficulty"""
-    user = models.ForeignKey(User, related_name='quiz_history', on_delete=models.CASCADE)
-    quiz = models.ForeignKey(Quiz, related_name='user_history', on_delete=models.CASCADE)
-    average_score = models.FloatField(default=0.0)
-    total_attempts = models.PositiveIntegerField(default=0)
-    last_difficulty_level = models.CharField(
-        max_length=20,
-        choices=[
-            ('beginner', 'Beginner'),
-            ('intermediate', 'Intermediate'),
-            ('advanced', 'Advanced')
-        ],
-        default='intermediate'
-    )
-    performance_trend = models.JSONField(
-        default=list,
-        help_text="List of recent scores to track improvement"
-    )
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        unique_together = ['user', 'quiz']
-        verbose_name_plural = "User quiz histories"
-
-    def __str__(self):
-        return f"{self.user.username} - {self.quiz.learning_material.title} History"      
+        return f"{self.user.email} - {self.module.title}"      

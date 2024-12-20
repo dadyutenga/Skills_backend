@@ -1,0 +1,8 @@
+ Category - Course categories (Financial Literacy, Communication Skills, etc.)
+Course - Main course information with fields like title, category, difficulty level, etc.
+Module - Course modules containing lessons
+Lesson - Individual lessons within modules
+LearningMaterial - Content items within lessons (text, video, article, etc.)
+as  i see  the  sql  i wan you to  optimize this   table  as  i watnt  you  to generate the models  of the course  to ha media url and  the like contstraints like for  which age this materila is and how the  diffculty like  begginer  proffesional   intermediate   and  brach out how the  courses can have the  many modules lin which will be aplied in latter strages  and  please  add some  featuring  in which any  user who selects  a course the course willl be a ctulally linked to him  by  refferencing  so  this  class User(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    auth0_id = models.CharField(max_length=255, unique=True)  #  whish  specifies the user who logged  in   so  create some  mechanism whih will aid the progress tracking  
