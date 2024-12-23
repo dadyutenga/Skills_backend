@@ -243,3 +243,132 @@ class VideoEmbededService:
             
         except Exception:
             return False
+
+    def _fetch_video_data(self, video_id: str) -> Dict:
+        """
+        Fetch detailed video data from YouTube API including available formats
+        
+        Args:
+            video_id: YouTube video identifier
+            
+        Returns:
+            Dict containing video formats and metadata
+        """
+        try:
+            # First check cache
+            cache_key = f"video_formats:{video_id}"
+            video_data = cache.get(cache_key)
+            
+            if not video_data:
+                # Fetch video formats and details
+                response = requests.get(
+                    f"{self.YOUTUBE_API_BASE_URL}/videos",
+                    params={
+                        'part': 'snippet,contentDetails,status,player',
+                        'id': video_id,
+                        'key': self.api_key
+                    }
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                if not data.get('items'):
+                    raise ValueError(f"No video data found for ID: {video_id}")
+
+                video_item = data['items'][0]
+                
+                # Construct video data with available formats
+                video_data = {
+                    'formats': {
+                        'high': f"https://www.youtube.com/embed/{video_id}?vq=hd720",
+                        'medium': f"https://www.youtube.com/embed/{video_id}?vq=medium",
+                        'low': f"https://www.youtube.com/embed/{video_id}?vq=small"
+                    },
+                    'default_format': 'medium',
+                    'status': video_item['status']['embeddable'],
+                    'player': video_item.get('player', {}),
+                    'content_details': video_item['contentDetails']
+                }
+                
+                # Cache the video data
+                cache.set(cache_key, video_data, timeout=3600)  # Cache for 1 hour
+            
+            return video_data
+            
+        except Exception as e:
+            self.logger.error(f"Error fetching video data: {str(e)}")
+            raise
+
+    def _select_video_quality(self, video_data: Dict, quality: str = 'high') -> str:
+        """
+        Select appropriate video URL based on requested quality
+        
+        Args:
+            video_data: Dictionary containing video format information
+            quality: Requested quality level ('high', 'medium', 'low')
+            
+        Returns:
+            URL for the selected video quality
+        """
+        try:
+            available_formats = video_data.get('formats', {})
+            
+            # Quality fallback chain
+            quality_chain = {
+                'high': ['high', 'medium', 'low'],
+                'medium': ['medium', 'low', 'high'],
+                'low': ['low', 'medium', 'high']
+            }
+            
+            # Try to get requested quality or fall back to alternatives
+            for fallback_quality in quality_chain.get(quality, ['medium']):
+                if fallback_quality in available_formats:
+                    return available_formats[fallback_quality]
+            
+            # If no format found, return default embed URL
+            return available_formats.get(
+                video_data.get('default_format', 'medium'),
+                f"https://www.youtube.com/embed/{video_data.get('video_id')}"
+            )
+            
+        except Exception as e:
+            self.logger.error(f"Error selecting video quality: {str(e)}")
+            raise
+
+    def _generate_preview_url(self, video_id: str, timestamp: int = 0) -> str:
+        """
+        Generate preview URL for video with timestamp
+        
+        Args:
+            video_id: YouTube video identifier
+            timestamp: Start time in seconds for preview
+            
+        Returns:
+            URL for video preview
+        """
+        try:
+            # Generate preview URL with timestamp and preview-specific parameters
+            preview_params = {
+                'start': timestamp,
+                'autoplay': 0,  # Don't autoplay preview
+                'controls': 1,   # Show controls
+                'modestbranding': 1,  # Minimal YouTube branding
+                'rel': 0,        # Don't show related videos
+                'showinfo': 0    # Don't show video information
+            }
+            
+            # Build parameter string
+            param_string = '&'.join([f"{k}={v}" for k, v in preview_params.items()])
+            
+            # Construct preview URL
+            preview_url = f"https://www.youtube.com/embed/{video_id}?{param_string}"
+            
+            # Cache preview URL
+            cache_key = f"preview_url:{video_id}:{timestamp}"
+            cache.set(cache_key, preview_url, timeout=3600)  # Cache for 1 hour
+            
+            return preview_url
+            
+        except Exception as e:
+            self.logger.error(f"Error generating preview URL: {str(e)}")
+            raise
