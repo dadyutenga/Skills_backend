@@ -1,124 +1,155 @@
 from typing import Dict, Optional
 from django.core.exceptions import ValidationError
-from ..models import UserFeedback, Course, Module
+from ..models import UserFeedback, UserCourseEnrollment, Module
+from Oauth.models import User
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
 class FeedbackModule:
-    """Service for managing user feedback during learning process"""
+    """Service for managing feedback on course delivery and platform functionality"""
 
     def __init__(self):
         self.logger = logger
 
-    def create_feedback(
+    def create_course_feedback(
         self, 
-        user_id: int, 
-        course_id: int, 
+        user_id: uuid.UUID,
+        enrollment_id: int,
         module_id: Optional[int] = None,
-        quiz_feedback: Dict = None,
-        answer_feedback: Dict = None,
-        performance_feedback: Dict = None
+        content_delivery_feedback: Dict = None,
+        platform_experience_feedback: Dict = None,
+        learning_experience_feedback: Dict = None
     ) -> UserFeedback:
         """
-        Create new feedback entry for a user
+        Create feedback about course delivery and platform experience
         """
         try:
+            enrollment = UserCourseEnrollment.objects.get(
+                id=enrollment_id,
+                user_id=user_id
+            )
+            
             feedback = UserFeedback.objects.create(
                 user_id=user_id,
-                course_id=course_id,
+                enrollment=enrollment,
                 module_id=module_id,
-                quiz_feedback=quiz_feedback or {},
-                answer_feedback=answer_feedback or {},
-                performance_feedback=performance_feedback or {}
+                quiz_feedback={
+                    'content_delivery': content_delivery_feedback or {},
+                    'platform_experience': platform_experience_feedback or {},
+                    'learning_experience': learning_experience_feedback or {}
+                }
             )
             return feedback
         except Exception as e:
-            self.logger.error(f"Error creating feedback: {str(e)}")
+            self.logger.error(f"Error creating feedback for user {user_id}: {str(e)}")
             raise ValidationError("Failed to create feedback")
 
-    def update_quiz_feedback(
+    def update_delivery_feedback(
         self, 
-        user_id: int, 
-        course_id: int, 
+        user_id: uuid.UUID,
+        enrollment_id: int,
         module_id: int,
-        quiz_feedback: Dict
+        delivery_feedback: Dict
     ) -> UserFeedback:
         """
-        Update quiz feedback for a specific module
+        Update feedback about content delivery methods
         """
         try:
+            enrollment = UserCourseEnrollment.objects.get(
+                id=enrollment_id,
+                user_id=user_id
+            )
             feedback, _ = UserFeedback.objects.get_or_create(
                 user_id=user_id,
-                course_id=course_id,
+                enrollment=enrollment,
                 module_id=module_id
             )
-            feedback.quiz_feedback.update(quiz_feedback)
+            
+            current_feedback = feedback.quiz_feedback.get('content_delivery', {})
+            current_feedback.update(delivery_feedback)
+            feedback.quiz_feedback['content_delivery'] = current_feedback
             feedback.save()
+            
             return feedback
         except Exception as e:
-            self.logger.error(f"Error updating quiz feedback: {str(e)}")
-            raise ValidationError("Failed to update quiz feedback")
+            self.logger.error(f"Error updating delivery feedback for user {user_id}: {str(e)}")
+            raise ValidationError("Failed to update delivery feedback")
 
-    def add_answer_feedback(
+    def add_platform_feedback(
         self, 
-        user_id: int, 
-        course_id: int, 
+        user_id: uuid.UUID,
+        enrollment_id: int,
         module_id: int,
-        question_id: str,
+        feature_id: str,
         feedback_text: str
     ) -> UserFeedback:
         """
-        Add feedback for a specific answer
+        Add feedback about platform features and functionality
         """
         try:
+            enrollment = UserCourseEnrollment.objects.get(
+                id=enrollment_id,
+                user_id=user_id
+            )
             feedback, _ = UserFeedback.objects.get_or_create(
                 user_id=user_id,
-                course_id=course_id,
+                enrollment=enrollment,
                 module_id=module_id
             )
-            feedback.answer_feedback[question_id] = feedback_text
+            
+            if 'platform_experience' not in feedback.quiz_feedback:
+                feedback.quiz_feedback['platform_experience'] = {}
+                
+            feedback.quiz_feedback['platform_experience'][feature_id] = feedback_text
             feedback.save()
+            
             return feedback
         except Exception as e:
-            self.logger.error(f"Error adding answer feedback: {str(e)}")
-            raise ValidationError("Failed to add answer feedback")
+            self.logger.error(f"Error adding platform feedback for user {user_id}: {str(e)}")
+            raise ValidationError("Failed to add platform feedback")
 
-    def update_performance_feedback(
+    def update_learning_experience(
         self, 
-        user_id: int, 
-        course_id: int,
+        enrollment_id: int,
         feedback_data: Dict
     ) -> UserFeedback:
         """
-        Update overall performance feedback
+        Update feedback about overall learning experience
         """
         try:
+            enrollment = UserCourseEnrollment.objects.get(id=enrollment_id)
             feedback, _ = UserFeedback.objects.get_or_create(
-                user_id=user_id,
-                course_id=course_id
+                enrollment=enrollment
             )
-            feedback.performance_feedback.update(feedback_data)
+            
+            current_feedback = feedback.quiz_feedback.get('learning_experience', {})
+            current_feedback.update(feedback_data)
+            feedback.quiz_feedback['learning_experience'] = current_feedback
             feedback.save()
+            
             return feedback
         except Exception as e:
-            self.logger.error(f"Error updating performance feedback: {str(e)}")
-            raise ValidationError("Failed to update performance feedback")
+            self.logger.error(f"Error updating learning experience feedback: {str(e)}")
+            raise ValidationError("Failed to update learning experience feedback")
 
-    def get_user_feedback(
+    def get_course_feedback(
         self, 
-        user_id: int, 
-        course_id: Optional[int] = None, 
+        user_id: Optional[uuid.UUID] = None,
+        enrollment_id: Optional[int] = None,
         module_id: Optional[int] = None
     ) -> Dict:
         """
-        Retrieve user feedback for course/module
+        Retrieve feedback for course delivery and platform experience
         """
         try:
-            query = UserFeedback.objects.filter(user_id=user_id)
+            query = UserFeedback.objects.all()
             
-            if course_id:
-                query = query.filter(course_id=course_id)
+            if user_id:
+                query = query.filter(user_id=user_id)
+            if enrollment_id:
+                query = query.filter(enrollment_id=enrollment_id)
             if module_id:
                 query = query.filter(module_id=module_id)
 
@@ -127,16 +158,18 @@ class FeedbackModule:
             return {
                 'feedbacks': [
                     {
-                        'course_id': feedback.course_id,
+                        'user_id': feedback.user_id,
+                        'user_email': feedback.user.email,
+                        'course_name': feedback.enrollment.course.title,
                         'module_id': feedback.module_id,
-                        'quiz_feedback': feedback.quiz_feedback,
-                        'answer_feedback': feedback.answer_feedback,
-                        'performance_feedback': feedback.performance_feedback,
+                        'content_delivery': feedback.quiz_feedback.get('content_delivery', {}),
+                        'platform_experience': feedback.quiz_feedback.get('platform_experience', {}),
+                        'learning_experience': feedback.quiz_feedback.get('learning_experience', {}),
                         'updated_at': feedback.updated_at
                     }
                     for feedback in feedbacks
                 ]
             }
         except Exception as e:
-            self.logger.error(f"Error retrieving feedback: {str(e)}")
+            self.logger.error(f"Error retrieving course feedback: {str(e)}")
             return {'feedbacks': []}

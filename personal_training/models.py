@@ -148,4 +148,81 @@ class UserModuleProgress(models.Model):
         unique_together = ['user', 'module']
 
     def __str__(self):
-        return f"{self.user.email} - {self.module.title}"      
+        return f"{self.user.email} - {self.module.title}"
+
+class UserFeedback(models.Model):
+    """Store comprehensive feedback and analytics for users"""
+    user = models.ForeignKey('Oauth.User', related_name='feedbacks', on_delete=models.CASCADE)
+    course = models.ForeignKey('Course', related_name='user_feedbacks', on_delete=models.CASCADE)
+    module = models.ForeignKey('Module', related_name='user_feedbacks', null=True, blank=True, on_delete=models.SET_NULL)
+    
+    # Performance Metrics
+    completion_rate = models.FloatField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    engagement_score = models.FloatField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    progress_velocity = models.FloatField(default=0)  # Items completed per week
+    
+    # Learning Patterns
+    preferred_learning_style = models.CharField(max_length=50, default='visual')
+    content_interaction_time = models.JSONField(default=dict)  # Store time spent on different content types
+    
+    # Performance Areas
+    strength_areas = models.JSONField(default=list)  # List of strong topics
+    challenge_areas = models.JSONField(default=list)  # List of topics needing improvement
+    
+    # Quiz Performance
+    quiz_results = models.JSONField(default=dict)  # Store detailed quiz performance
+    average_quiz_score = models.FloatField(
+        default=0,
+        validators=[MinValueValidator(0), MaxValueValidator(100)]
+    )
+    
+    # Activity Tracking
+    last_activity_date = models.DateTimeField(auto_now=True)
+    total_time_spent = models.PositiveIntegerField(default=0)  # Time in minutes
+    login_frequency = models.PositiveIntegerField(default=0)  # Logins per week
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        unique_together = ['user', 'course', 'module']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.course.title} Feedback"
+
+class PerformanceMetric(models.Model):
+    """Track detailed performance metrics over time"""
+    user_feedback = models.ForeignKey(UserFeedback, related_name='performance_metrics', on_delete=models.CASCADE)
+    metric_type = models.CharField(max_length=50)  # e.g., 'quiz_score', 'engagement', 'completion'
+    value = models.FloatField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        ordering = ['-timestamp']
+
+    def __str__(self):
+        return f"{self.user_feedback.user.email} - {self.metric_type}"
+
+class LearningActivity(models.Model):
+    """Track specific learning activities and interactions"""
+    user_feedback = models.ForeignKey(UserFeedback, related_name='learning_activities', on_delete=models.CASCADE)
+    activity_type = models.CharField(max_length=50)  # e.g., 'quiz_attempt', 'content_view', 'exercise'
+    content_type = models.CharField(max_length=50)  # e.g., 'video', 'text', 'interactive'
+    duration = models.PositiveIntegerField(default=0)  # Time spent in minutes
+    metadata = models.JSONField(default=dict)  # Additional activity-specific data
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        verbose_name_plural = "Learning Activities"
+
+    def __str__(self):
+        return f"{self.user_feedback.user.email} - {self.activity_type}"
