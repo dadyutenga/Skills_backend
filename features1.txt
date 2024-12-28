@@ -1,1 +1,4 @@
-@views.py hello  lets  modify the  views  file called  the quiz_module  in which some methods that  i will not use in te views  as  the functioning of he   quiz_modl will change as per my instruction in  which  the  quiz module  willl operate as  a service imported  by the platform =.py in which i have already done  soowhat  willl you  do as  the  per instruction  i willl give in which first is that the quiz model will operate as teh  service in which it will be feed the  course info in  which please leave the  parameters like the how the questions  are  to be delivered  as we will not touch that  cahnge  it because what we willl which we will create the apis  this will be doen letter  in which the  module willl generate the  questions  and  also take the  asnwers and validate them  and  give out if the answers are correct or  not  then it will also do the evaluation of the  answers and  the questions  so if you  understand  please continuewith the  genration of the code which  must be quality and bug free  and give me the  most extendive code that cover what i told  you 
+helllo  here its how its works  
+
+
+
