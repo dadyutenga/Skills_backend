@@ -18,13 +18,13 @@ class DemoService:
         'senior': (51, 100)
     }
 
-    # Learning style preferences
+    # TODO: Future Implementation - Learning style preferences
+    # These styles will be used to personalize content delivery once all content types are fully implemented
     LEARNING_STYLES = {
-        'visual': 'Learn through images, videos, and diagrams',
-        'auditory': 'Learn through lectures and discussions',
-        'reading': 'Learn through reading and writing',
-        'kinesthetic': 'Learn through hands-on practice',
-        'mixed': 'Combination of different learning styles'
+        'text': 'Learn through written content and documentation',
+        'video': 'Learn through video demonstrations',
+        'articles': 'Learn through in-depth articles',
+        'interactive': 'Learn through hands-on exercises'
     }
 
     def __init__(self):
@@ -55,15 +55,16 @@ class DemoService:
             if experience_level not in ['beginner', 'intermediate', 'advanced']:
                 raise ValidationError("Invalid experience level")
 
-            if learning_style not in self.LEARNING_STYLES.keys():
-                raise ValidationError("Invalid learning style")
+            # Commented out learning style validation for future implementation
+            # if learning_style not in self.LEARNING_STYLES.keys():
+            #     raise ValidationError("Invalid learning style")
 
             self.user_profile = {
                 'age': age,
                 'age_group': self._determine_age_group(age),
                 'experience_level': experience_level,
                 'has_mentor': has_mentor,
-                'learning_style': learning_style,
+                'learning_style': learning_style,  # Will keep storing but not validating for now
                 'created_at': datetime.now().isoformat()
             }
 
@@ -84,20 +85,64 @@ class DemoService:
             if not self.user_profile:
                 raise ValidationError("User profile not initialized")
 
-            # Get courses based on difficulty level and age group
+            # Get courses based on difficulty level and active status
             courses = Course.objects.filter(
                 is_active=True,
                 difficulty_level=self._map_experience_to_difficulty()
             )
 
-            # Filter courses by age appropriateness
-            age_appropriate_courses = self._filter_age_appropriate_courses(courses)
+            # Filter courses by age appropriateness using the model's method
+            age = self.user_profile['age']
+            age_appropriate_courses = [
+                course for course in courses 
+                if course.is_age_appropriate(age)
+            ]
 
             # Organize recommendations by category
             self.recommendations = {
-                'recommended': self._get_primary_recommendations(age_appropriate_courses),
-                'alternative': self._get_alternative_recommendations(age_appropriate_courses),
-                'mentor_supported': self._get_mentor_supported_courses(age_appropriate_courses) if self.user_profile['has_mentor'] else []
+                'recommended': [
+                    {
+                        'id': course.id,
+                        'title': course.title,
+                        'category': course.category.name,
+                        'difficulty': course.difficulty_level,
+                        'duration_hours': course.duration_hours,
+                        'thumbnail': course.thumbnail,
+                        'preview_video': course.preview_video,
+                        'overview': course.overview,
+                        'learning_objectives': course.learning_objectives,
+                        'prerequisites': course.prerequisites,
+                        'modules_count': course.modules.count(),
+                        'age_group': course.age_group,
+                    }
+                    for course in age_appropriate_courses[:5]  # Top 5 recommendations
+                ],
+                'alternative': [
+                    {
+                        'id': course.id,
+                        'title': course.title,
+                        'category': course.category.name,
+                        'difficulty': course.difficulty_level,
+                        'duration_hours': course.duration_hours,
+                        'thumbnail': course.thumbnail,
+                        'overview': course.overview,
+                        'age_group': course.age_group,
+                    }
+                    for course in age_appropriate_courses[5:10]  # Next 5 recommendations
+                ],
+                'mentor_supported': [
+                    {
+                        'id': course.id,
+                        'title': course.title,
+                        'category': course.category.name,
+                        'difficulty': course.difficulty_level,
+                        'duration_hours': course.duration_hours,
+                        'thumbnail': course.thumbnail,
+                        'overview': course.overview,
+                    }
+                    for course in age_appropriate_courses 
+                    if self.user_profile['has_mentor']
+                ][:5]  # Top 5 mentor-supported courses
             }
 
             return self.recommendations
@@ -106,7 +151,7 @@ class DemoService:
             logger.error(f"Error generating course recommendations: {str(e)}")
             raise
 
-    def get_learning_path(self) -> Dict:
+    #def get_learning_path(self) -> Dict:
         """
         Generate a structured learning path based on user profile and recommendations
         
@@ -125,7 +170,8 @@ class DemoService:
                     'advanced_milestones': self._generate_milestones('advanced'),
                 },
                 'estimated_completion_time': self._calculate_completion_time(),
-                'learning_style_adaptations': self._get_learning_style_adaptations()
+                # Commented out learning style adaptations for future implementation
+                # 'learning_style_adaptations': self._get_learning_style_adaptations()
             }
 
         except Exception as e:
@@ -170,7 +216,8 @@ class DemoService:
                 'category': course.category.name,
                 'difficulty': course.difficulty_level,
                 'duration_hours': course.duration_hours,
-                'learning_style_match': self._calculate_learning_style_match(course)
+                # Commented out learning style match for future implementation
+                # 'learning_style_match': self._calculate_learning_style_match(course)
             }
             for course in courses[:5]  # Top 5 recommendations
         ]
@@ -188,15 +235,51 @@ class DemoService:
             for course in courses[5:10]  # Next 5 recommendations
         ]
 
-    def _get_mentor_supported_courses(self, courses) -> List[Dict]:
+    #def _get_mentor_supported_courses(self, courses) -> List[Dict]:
         """Get courses with mentor support"""
-        # Add logic to filter courses with mentor support
-        return []  # Placeholder return
+        try:
+            if not self.user_profile.get('has_mentor'):
+                return []
 
-    def _generate_milestones(self, level: str) -> List[Dict]:
-        """Generate learning milestones for each difficulty level"""
-        # Add milestone generation logic
-        return []  # Placeholder return
+            mentor_supported_courses = [
+                {
+                    'id': course.id,
+                    'title': course.title,
+                    'category': course.category.name,
+                    'difficulty': course.difficulty_level,
+                    'duration_hours': course.duration_hours,
+                    'thumbnail': course.thumbnail,
+                    'overview': course.overview,
+                    'prerequisites': course.prerequisites,
+                    'modules_count': course.modules.count()
+                }
+                for course in courses
+                if course.is_active and self._is_suitable_for_mentoring(course)
+            ][:5]  # Limit to top 5 mentor-supported courses
+
+            return mentor_supported_courses
+
+        except Exception as e:
+            logger.error(f"Error getting mentor supported courses: {str(e)}")
+            return []
+
+    def _is_suitable_for_mentoring(self, course: Course) -> bool:
+        """
+        Determine if a course is suitable for mentoring based on:
+        - Course difficulty level
+        - User's experience level
+        """
+        user_level = self.user_profile.get('experience_level', 'beginner')
+        course_level = course.difficulty_level
+
+        # Match mentoring suitability based on experience levels
+        mentoring_matrix = {
+            'beginner': ['beginner', 'intermediate'],
+            'intermediate': ['intermediate', 'professional'],
+            'advanced': ['professional']
+        }
+
+        return course_level in mentoring_matrix.get(user_level, [])
 
     def _calculate_completion_time(self) -> Dict:
         """Calculate estimated completion time for recommended courses"""
@@ -206,52 +289,52 @@ class DemoService:
             'hours_per_week': 10
         }
 
-    def _get_learning_style_adaptations(self) -> Dict:
-        """Get learning style specific adaptations"""
-        style = self.user_profile['learning_style']
-        return {
-            'recommended_materials': self._get_style_specific_materials(style),
-            'study_techniques': self._get_style_specific_techniques(style),
-            'tools': self._get_style_specific_tools(style)
-        }
+    # Commented out helper methods for future learning style implementation
+    # def _calculate_learning_style_match(self, course: Course) -> float:
+    #     """Calculate how well a course matches user's learning style"""
+    #     return 0.8  # Placeholder return
 
-    def _calculate_learning_style_match(self, course: Course) -> float:
-        """Calculate how well a course matches user's learning style"""
-        # Add learning style matching logic
-        return 0.8  # Placeholder return
+    # def _get_learning_style_adaptations(self) -> Dict:
+    #     """Get learning style specific adaptations"""
+    #     style = self.user_profile['learning_style']
+    #     return {
+    #         'recommended_materials': self._get_style_specific_materials(style),
+    #         'study_techniques': self._get_style_specific_techniques(style),
+    #         'tools': self._get_style_specific_tools(style)
+    #     }
 
-    def _get_style_specific_materials(self, style: str) -> List[str]:
-        """Get learning style specific materials"""
-        materials_map = {
-            'visual': ['Video tutorials', 'Infographics', 'Mind maps'],
-            'auditory': ['Audio lectures', 'Podcast episodes', 'Group discussions'],
-            'reading': ['Text tutorials', 'Documentation', 'Case studies'],
-            'kinesthetic': ['Interactive exercises', 'Projects', 'Labs'],
-            'mixed': ['Varied content types', 'Multi-modal resources']
-        }
-        return materials_map.get(style, [])
+    # def _get_style_specific_materials(self, style: str) -> List[str]:
+    #     """Get learning style specific materials"""
+    #     materials_map = {
+    #         'visual': ['Video tutorials', 'Infographics', 'Mind maps'],
+    #         'auditory': ['Audio lectures', 'Podcast episodes', 'Group discussions'],
+    #         'reading': ['Text tutorials', 'Documentation', 'Case studies'],
+    #         'kinesthetic': ['Interactive exercises', 'Projects', 'Labs'],
+    #         'mixed': ['Varied content types', 'Multi-modal resources']
+    #     }
+    #     return materials_map.get(style, [])
 
-    def _get_style_specific_techniques(self, style: str) -> List[str]:
-        """Get learning style specific study techniques"""
-        techniques_map = {
-            'visual': ['Diagram creation', 'Visual note-taking'],
-            'auditory': ['Recording summaries', 'Group discussions'],
-            'reading': ['Note-taking', 'Summarization'],
-            'kinesthetic': ['Practice exercises', 'Real-world applications'],
-            'mixed': ['Mixed approach techniques']
-        }
-        return techniques_map.get(style, [])
+    # def _get_style_specific_techniques(self, style: str) -> List[str]:
+    #     """Get learning style specific study techniques"""
+    #     techniques_map = {
+    #         'visual': ['Diagram creation', 'Visual note-taking'],
+    #         'auditory': ['Recording summaries', 'Group discussions'],
+    #         'reading': ['Note-taking', 'Summarization'],
+    #         'kinesthetic': ['Practice exercises', 'Real-world applications'],
+    #         'mixed': ['Mixed approach techniques']
+    #     }
+    #     return techniques_map.get(style, [])
 
-    def _get_style_specific_tools(self, style: str) -> List[str]:
-        """Get learning style specific tools"""
-        tools_map = {
-            'visual': ['Mind mapping software', 'Video editing tools'],
-            'auditory': ['Audio recording apps', 'Discussion platforms'],
-            'reading': ['Note-taking apps', 'Document readers'],
-            'kinesthetic': ['Interactive coding platforms', 'Project management tools'],
-            'mixed': ['All-in-one learning platforms']
-        }
-        return tools_map.get(style, [])
+    # def _get_style_specific_tools(self, style: str) -> List[str]:
+    #     """Get learning style specific tools"""
+    #     tools_map = {
+    #         'visual': ['Mind mapping software', 'Video editing tools'],
+    #         'auditory': ['Audio recording apps', 'Discussion platforms'],
+    #         'reading': ['Note-taking apps', 'Document readers'],
+    #         'kinesthetic': ['Interactive coding platforms', 'Project management tools'],
+    #         'mixed': ['All-in-one learning platforms']
+    #     }
+    #     return tools_map.get(style, [])
 
     
 
